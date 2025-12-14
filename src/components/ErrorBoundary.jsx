@@ -1,5 +1,4 @@
 import { Component } from 'react'
-import { Link } from 'react-router-dom'
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -15,6 +14,15 @@ class ErrorBoundary extends Component {
     console.error('Error caught by boundary:', error, errorInfo)
   }
 
+  handleReset = () => {
+    this.setState({ hasError: false, error: null })
+    window.location.href = '/'
+  }
+
+  handleReload = () => {
+    window.location.reload()
+  }
+
   render() {
     if (this.state.hasError) {
       return (
@@ -24,17 +32,17 @@ class ErrorBoundary extends Component {
             <p>We're sorry, but something unexpected happened.</p>
             <div className="error-actions">
               <button
-                onClick={() => {
-                  this.setState({ hasError: false, error: null })
-                  window.location.href = '/'
-                }}
+                onClick={this.handleReset}
                 className="btn-primary"
               >
                 Go to Homepage
               </button>
-              <Link to="/" className="btn-secondary">
+              <button
+                onClick={this.handleReload}
+                className="btn-secondary"
+              >
                 Try Again
-              </Link>
+              </button>
             </div>
             {process.env.NODE_ENV === 'development' && this.state.error && (
               <details className="error-details">
