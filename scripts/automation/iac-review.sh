@@ -30,12 +30,12 @@ echo "-------------------------------"
 if [ -f ".devcontainer/devcontainer.json" ]; then
     echo -e "${GREEN}✅ devcontainer.json found${NC}"
     
-    # Validate JSON
-    if node -e "require('./.devcontainer/devcontainer.json')" 2>/dev/null; then
-        echo -e "   ${GREEN}✅ Valid JSON${NC}"
+    # Validate JSON (strip comments first as devcontainer.json uses JSONC)
+    if sed 's|//.*||g' .devcontainer/devcontainer.json | node -e "let d=''; process.stdin.on('data',c=>d+=c); process.stdin.on('end',()=>{try{JSON.parse(d);process.exit(0)}catch(e){process.exit(1)}})" 2>/dev/null; then
+        echo -e "   ${GREEN}✅ Valid JSONC${NC}"
     else
         echo -e "   ${RED}❌ Invalid JSON${NC}"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
     
     # Check for Dockerfile
@@ -65,7 +65,7 @@ if [ -f "Dockerfile" ]; then
     else
         echo -e "   ${YELLOW}⚠️  No .dockerignore file${NC}"
         echo "   Create .dockerignore to exclude unnecessary files"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
     
     # Check for multi-stage builds
@@ -175,7 +175,7 @@ if [ -f ".env" ]; then
         echo -e "   ${GREEN}✅ .env is in .gitignore${NC}"
     else
         echo -e "   ${RED}❌ .env NOT in .gitignore${NC}"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
 fi
 
@@ -213,7 +213,7 @@ if [ -d "terraform" ] || find . -name "*.tf" -type f | grep -q .; then
             echo -e "   ${GREEN}✅ .terraform is in .gitignore${NC}"
         else
             echo -e "   ${RED}❌ .terraform NOT in .gitignore${NC}"
-            ((ISSUES_FOUND++))
+            ((ISSUES_FOUND++)) || true
         fi
     fi
 fi
@@ -288,7 +288,7 @@ if [ $SECRETS_FOUND -eq 0 ]; then
 else
     echo -e "${RED}❌ Found $SECRETS_FOUND potential secrets${NC}"
     echo "   Review configuration files for sensitive data"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Best practices

@@ -42,7 +42,7 @@ if command -v node &> /dev/null; then
 else
     echo -e "${RED}❌ Node.js not installed${NC}"
     echo "   Install from: https://nodejs.org/"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check npm
@@ -53,7 +53,7 @@ if command -v npm &> /dev/null; then
     echo -e "${GREEN}✅ npm installed: v$NPM_VERSION${NC}"
 else
     echo -e "${RED}❌ npm not installed${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check package.json
@@ -70,7 +70,7 @@ if [ -f "$PROJECT_ROOT/package.json" ]; then
     echo "   Version: $PKG_VERSION"
 else
     echo -e "${RED}❌ package.json not found${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check node_modules
@@ -90,7 +90,7 @@ if [ -d "$PROJECT_ROOT/node_modules" ]; then
 else
     echo -e "${RED}❌ node_modules not found${NC}"
     echo "   Run: npm install"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check Git
@@ -119,7 +119,7 @@ if command -v git &> /dev/null; then
     fi
 else
     echo -e "${RED}❌ Git not installed${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for .gitignore
@@ -130,7 +130,7 @@ if [ -f "$PROJECT_ROOT/.gitignore" ]; then
     echo -e "${GREEN}✅ .gitignore exists ($LINES lines)${NC}"
 else
     echo -e "${RED}❌ .gitignore not found${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check environment variables
@@ -145,7 +145,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
         echo -e "   ${GREEN}✅ .env is in .gitignore${NC}"
     else
         echo -e "   ${RED}❌ .env NOT in .gitignore${NC}"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
 else
     echo -e "${GREEN}✅ No .env file (or properly ignored)${NC}"
@@ -208,7 +208,7 @@ if command -v df &> /dev/null; then
     
     if [ "$DISK_USAGE" -gt 90 ]; then
         echo -e "   ${RED}❌ Disk usage critical: ${DISK_USAGE}%${NC}"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     elif [ "$DISK_USAGE" -gt 80 ]; then
         echo -e "   ${YELLOW}⚠️  Disk usage high: ${DISK_USAGE}%${NC}"
     else

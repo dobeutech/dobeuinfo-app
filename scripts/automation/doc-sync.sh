@@ -47,13 +47,15 @@ if [ -d "$COMPONENTS_DIR" ]; then
     # List components without JSDoc
     echo "   Checking for JSDoc comments..."
     UNDOCUMENTED=0
-    for file in "$COMPONENTS_DIR"/*.{jsx,tsx} 2>/dev/null; do
+    shopt -s nullglob
+    for file in "$COMPONENTS_DIR"/*.jsx "$COMPONENTS_DIR"/*.tsx; do
         [ -f "$file" ] || continue
         if ! grep -q "^/\*\*" "$file"; then
             echo -e "   ${YELLOW}⚠️  $(basename "$file") - Missing JSDoc${NC}"
-            ((UNDOCUMENTED++))
+            ((UNDOCUMENTED++)) || true
         fi
     done
+    shopt -u nullglob
     
     if [ $UNDOCUMENTED -eq 0 ]; then
         echo -e "   ${GREEN}✅ All components documented${NC}"
@@ -96,7 +98,8 @@ Generated: $(date +"%Y-%m-%d %H:%M:%S")
 EOF
 
 if [ -d "$COMPONENTS_DIR" ]; then
-    for file in "$COMPONENTS_DIR"/*.{jsx,tsx} 2>/dev/null; do
+    shopt -s nullglob
+    for file in "$COMPONENTS_DIR"/*.jsx "$COMPONENTS_DIR"/*.tsx; do
         [ -f "$file" ] || continue
         COMPONENT_NAME=$(basename "$file" | sed 's/\.[^.]*$//')
         
@@ -114,6 +117,7 @@ if [ -d "$COMPONENTS_DIR" ]; then
         echo "**File:** \`src/components/$COMPONENT_NAME.jsx\`" >> "$COMPONENT_INDEX"
         echo "" >> "$COMPONENT_INDEX"
     done
+    shopt -u nullglob
 fi
 
 echo -e "${GREEN}✅ Component index generated: docs/components.md${NC}"

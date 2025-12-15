@@ -63,7 +63,7 @@ else
     echo -e "   ${RED}❌ $MISSING images missing alt text${NC}"
     echo "   Images without alt:"
     grep -rn "<img" "$SRC_DIR" 2>/dev/null | grep -v "alt=" | head -5
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for button accessibility
@@ -218,7 +218,7 @@ if [ -f "$PROJECT_ROOT/index.html" ]; then
     else
         echo -e "${RED}❌ No lang attribute on <html> tag${NC}"
         echo "   Add lang='en' (or appropriate language) to <html> tag"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
 else
     echo -e "${YELLOW}⚠️  index.html not found${NC}"
@@ -233,7 +233,7 @@ if [ -f "$PROJECT_ROOT/index.html" ]; then
     else
         echo -e "${RED}❌ No viewport meta tag${NC}"
         echo "   Add: <meta name='viewport' content='width=device-width, initial-scale=1.0'>"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
 fi
 

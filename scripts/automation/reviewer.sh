@@ -51,11 +51,11 @@ if [ -f "$PROJECT_ROOT/package.json" ]; then
         echo -e "   ${GREEN}✅ Scripts defined${NC}"
     else
         echo -e "   ${YELLOW}⚠️  No scripts defined${NC}"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
 else
     echo -e "${RED}❌ package.json not found${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for security vulnerabilities
@@ -68,7 +68,7 @@ if command -v npm &> /dev/null; then
             echo -e "   ${GREEN}✅ No vulnerabilities found${NC}"
         else
             echo -e "   ${YELLOW}⚠️  Vulnerabilities detected - run 'npm audit' for details${NC}"
-            ((ISSUES_FOUND++))
+            ((ISSUES_FOUND++)) || true
         fi
     else
         echo -e "   ${YELLOW}⚠️  package-lock.json not found - run 'npm install'${NC}"
@@ -100,7 +100,7 @@ if [ -d "$PROJECT_ROOT/src" ]; then
     echo "   Total source files: $TOTAL_FILES"
 else
     echo -e "${RED}❌ src/ directory not found${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for common directories
@@ -128,7 +128,7 @@ else
         SIZE=$(du -h "$file" | cut -f1)
         echo "   $SIZE - $(basename "$file")"
     done
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for console.log statements
@@ -140,7 +140,7 @@ if [ "$CONSOLE_LOGS" -eq 0 ]; then
 else
     echo -e "${YELLOW}⚠️  Found $CONSOLE_LOGS console.log statements${NC}"
     echo "   Consider removing debug statements before production"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for TODO/FIXME comments
@@ -183,7 +183,7 @@ if [ "$TEST_FILES" -gt 0 ]; then
 else
     echo -e "${YELLOW}⚠️  No test files found${NC}"
     echo "   Consider adding tests for components and utilities"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for .env files
@@ -197,7 +197,7 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
         echo -e "   ${GREEN}✅ .env is in .gitignore${NC}"
     else
         echo -e "   ${RED}❌ .env NOT in .gitignore${NC}"
-        ((ISSUES_FOUND++))
+        ((ISSUES_FOUND++)) || true
     fi
 else
     echo -e "${GREEN}✅ No .env file in root${NC}"
@@ -215,12 +215,12 @@ if [ -f "$PROJECT_ROOT/.gitignore" ]; then
             echo "   ✅ Ignores: $pattern"
         else
             echo -e "   ${YELLOW}⚠️  Missing: $pattern${NC}"
-            ((ISSUES_FOUND++))
+            ((ISSUES_FOUND++)) || true
         fi
     done
 else
     echo -e "${RED}❌ .gitignore not found${NC}"
-    ((ISSUES_FOUND++))
+    ((ISSUES_FOUND++)) || true
 fi
 
 # Check for documentation
