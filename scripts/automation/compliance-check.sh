@@ -39,14 +39,14 @@ REQUIRED_FILES=(
 for entry in "${REQUIRED_FILES[@]}"; do
     FILE="${entry%%:*}"
     DESC="${entry##*:}"
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     
     if [ -e "$FILE" ]; then
         echo -e "${GREEN}✅ $DESC ($FILE)${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${RED}❌ $DESC ($FILE) - MISSING${NC}"
-        ((VIOLATIONS++))
+        ((VIOLATIONS++)) || true
     fi
 done
 
@@ -64,11 +64,11 @@ CODE_STANDARDS=(
 for entry in "${CODE_STANDARDS[@]}"; do
     FILE="${entry%%:*}"
     DESC="${entry##*:}"
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     
     if [ -f "$FILE" ]; then
         echo -e "${GREEN}✅ $DESC${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  $DESC - RECOMMENDED${NC}"
     fi
@@ -79,25 +79,25 @@ echo ""
 echo "🔧 Git Compliance"
 echo "-----------------"
 
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -d ".git" ]; then
     echo -e "${GREEN}✅ Git repository initialized${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
     
     # Check git config
     GIT_USER=$(git config user.name 2>/dev/null || echo "")
     GIT_EMAIL=$(git config user.email 2>/dev/null || echo "")
     
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     if [ -n "$GIT_USER" ] && [ -n "$GIT_EMAIL" ]; then
         echo -e "${GREEN}✅ Git user configured${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  Git user not configured${NC}"
     fi
     
     # Check for .gitignore patterns
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     if [ -f ".gitignore" ]; then
         REQUIRED_PATTERNS=("node_modules" "dist" ".env")
         MISSING_PATTERNS=()
@@ -110,14 +110,14 @@ if [ -d ".git" ]; then
         
         if [ ${#MISSING_PATTERNS[@]} -eq 0 ]; then
             echo -e "${GREEN}✅ .gitignore has required patterns${NC}"
-            ((COMPLIANCE_SCORE++))
+            ((COMPLIANCE_SCORE++)) || true
         else
             echo -e "${YELLOW}⚠️  .gitignore missing patterns: ${MISSING_PATTERNS[*]}${NC}"
         fi
     fi
 else
     echo -e "${RED}❌ Not a git repository${NC}"
-    ((VIOLATIONS++))
+    ((VIOLATIONS++)) || true
 fi
 
 # Security compliance
@@ -126,40 +126,40 @@ echo "🔒 Security Compliance"
 echo "----------------------"
 
 # Check for .env in .gitignore
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -f ".gitignore" ] && grep -q "^\.env$" .gitignore; then
     echo -e "${GREEN}✅ .env excluded from git${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${YELLOW}⚠️  .env should be in .gitignore${NC}"
 fi
 
 # Check for committed secrets
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 SENSITIVE_PATTERNS=("password.*=" "api[_-]?key.*=" "secret.*=" "token.*=")
 SECRETS_FOUND=0
 
 for pattern in "${SENSITIVE_PATTERNS[@]}"; do
     if git log --all -p 2>/dev/null | grep -iE "$pattern" | grep -v "example" | head -1 | grep -q .; then
-        ((SECRETS_FOUND++))
+        ((SECRETS_FOUND++)) || true
     fi
 done
 
 if [ "$SECRETS_FOUND" -eq 0 ]; then
     echo -e "${GREEN}✅ No obvious secrets in git history${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${RED}❌ Potential secrets found in git history${NC}"
     echo "   Run: git log --all -p | grep -i 'password\|api.key\|secret\|token'"
-    ((VIOLATIONS++))
+    ((VIOLATIONS++)) || true
 fi
 
 # Check for security vulnerabilities
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -f "package.json" ]; then
     if npm audit --json > /tmp/compliance-audit.json 2>&1; then
         echo -e "${GREEN}✅ No known vulnerabilities${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         VULN_COUNT=$(node -p "
             try {
@@ -174,10 +174,10 @@ if [ -f "package.json" ]; then
         
         if [ "$VULN_COUNT" -eq 0 ]; then
             echo -e "${YELLOW}⚠️  Low/moderate vulnerabilities found${NC}"
-            ((COMPLIANCE_SCORE++))
+            ((COMPLIANCE_SCORE++)) || true
         else
             echo -e "${RED}❌ High/critical vulnerabilities found${NC}"
-            ((VIOLATIONS++))
+            ((VIOLATIONS++)) || true
         fi
     fi
     rm -f /tmp/compliance-audit.json
@@ -190,34 +190,34 @@ echo "---------------------------"
 
 if [ -d "src" ]; then
     # Check for semantic HTML
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     SEMANTIC_COUNT=$(grep -rE "<(header|nav|main|section|article|footer)" src 2>/dev/null | wc -l || echo "0")
     if [ "$SEMANTIC_COUNT" -gt 0 ]; then
         echo -e "${GREEN}✅ Using semantic HTML${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  No semantic HTML elements found${NC}"
     fi
     
     # Check for alt text
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     IMG_TAGS=$(grep -r "<img" src 2>/dev/null | wc -l || echo "0")
     IMG_WITH_ALT=$(grep -r '<img[^>]*alt=' src 2>/dev/null | wc -l || echo "0")
     
     if [ "$IMG_TAGS" -eq 0 ] || [ "$IMG_TAGS" -eq "$IMG_WITH_ALT" ]; then
         echo -e "${GREEN}✅ Images have alt text${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${RED}❌ Some images missing alt text${NC}"
-        ((VIOLATIONS++))
+        ((VIOLATIONS++)) || true
     fi
     
     # Check for ARIA attributes
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     ARIA_COUNT=$(grep -r 'aria-' src 2>/dev/null | wc -l || echo "0")
     if [ "$ARIA_COUNT" -gt 0 ]; then
         echo -e "${GREEN}✅ Using ARIA attributes${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  No ARIA attributes found${NC}"
     fi
@@ -229,7 +229,7 @@ echo "📚 Documentation Compliance"
 echo "---------------------------"
 
 # Check README sections
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -f "README.md" ]; then
     REQUIRED_SECTIONS=("Installation" "Usage" "Development")
     MISSING_SECTIONS=()
@@ -242,41 +242,41 @@ if [ -f "README.md" ]; then
     
     if [ ${#MISSING_SECTIONS[@]} -eq 0 ]; then
         echo -e "${GREEN}✅ README has required sections${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  README missing sections: ${MISSING_SECTIONS[*]}${NC}"
     fi
 fi
 
 # Check for CHANGELOG
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -f "CHANGELOG.md" ]; then
     echo -e "${GREEN}✅ CHANGELOG.md exists${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${YELLOW}⚠️  CHANGELOG.md recommended${NC}"
 fi
 
 # Check for LICENSE
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -f "LICENSE" ] || [ -f "LICENSE.md" ]; then
     echo -e "${GREEN}✅ LICENSE file exists${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${YELLOW}⚠️  LICENSE file recommended${NC}"
 fi
 
 # Check for inline documentation
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -d "src/components" ]; then
     COMPONENTS=$(find src/components -name "*.jsx" -o -name "*.tsx" | wc -l)
-    DOCUMENTED=$(grep -l "^/\*\*" src/components/*.{jsx,tsx} 2>/dev/null | wc -l || echo "0")
+    DOCUMENTED=$(grep -l "^/\*\*" src/components/*.jsx src/components/*.tsx 2>/dev/null | wc -l || echo "0")
     
     if [ "$COMPONENTS" -gt 0 ]; then
         DOC_PERCENTAGE=$((DOCUMENTED * 100 / COMPONENTS))
         if [ "$DOC_PERCENTAGE" -ge 80 ]; then
             echo -e "${GREEN}✅ Components well documented ($DOC_PERCENTAGE%)${NC}"
-            ((COMPLIANCE_SCORE++))
+            ((COMPLIANCE_SCORE++)) || true
         elif [ "$DOC_PERCENTAGE" -ge 50 ]; then
             echo -e "${YELLOW}⚠️  Some components undocumented ($DOC_PERCENTAGE%)${NC}"
         else
@@ -290,21 +290,21 @@ echo ""
 echo "🧪 Testing Compliance"
 echo "---------------------"
 
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 TEST_FILES=$(find . -name "*.test.js" -o -name "*.test.jsx" -o -name "*.spec.js" -o -name "*.spec.jsx" 2>/dev/null | wc -l)
 
 if [ "$TEST_FILES" -gt 0 ]; then
     echo -e "${GREEN}✅ Test files present ($TEST_FILES files)${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${YELLOW}⚠️  No test files found${NC}"
 fi
 
 # Check for test configuration
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if grep -q "vitest\|jest" package.json 2>/dev/null; then
     echo -e "${GREEN}✅ Test framework configured${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${YELLOW}⚠️  No test framework configured${NC}"
 fi
@@ -314,21 +314,21 @@ echo ""
 echo "🏗️  Build Compliance"
 echo "--------------------"
 
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -f "package.json" ]; then
     if node -p "require('./package.json').scripts.build" &>/dev/null; then
         echo -e "${GREEN}✅ Build script configured${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${RED}❌ No build script${NC}"
-        ((VIOLATIONS++))
+        ((VIOLATIONS++)) || true
     fi
 fi
 
-((MAX_SCORE++))
+((MAX_SCORE++)) || true
 if [ -d "dist" ] || [ -d "build" ]; then
     echo -e "${GREEN}✅ Build output exists${NC}"
-    ((COMPLIANCE_SCORE++))
+    ((COMPLIANCE_SCORE++)) || true
 else
     echo -e "${YELLOW}⚠️  No build output (run: npm run build)${NC}"
 fi
@@ -339,12 +339,12 @@ echo "⚡ Performance Compliance"
 echo "-------------------------"
 
 if [ -d "dist" ]; then
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     JS_SIZE_KB=$(find dist -name "*.js" -exec stat -f%z {} + 2>/dev/null | awk '{s+=$1} END {print s/1024}' || echo "0")
     
     if [ "${JS_SIZE_KB%.*}" -lt 500 ]; then
         echo -e "${GREEN}✅ Bundle size acceptable (<500KB)${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     elif [ "${JS_SIZE_KB%.*}" -lt 1000 ]; then
         echo -e "${YELLOW}⚠️  Bundle size moderate (${JS_SIZE_KB%.*}KB)${NC}"
     else
@@ -359,21 +359,21 @@ echo "--------------------------"
 
 if [ -d "src" ]; then
     # Check for console.log
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     CONSOLE_LOGS=$(grep -r "console\.log" src 2>/dev/null | wc -l || echo "0")
     if [ "$CONSOLE_LOGS" -lt 5 ]; then
         echo -e "${GREEN}✅ Minimal debug statements${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  Many console.log statements ($CONSOLE_LOGS)${NC}"
     fi
     
     # Check for TODO/FIXME
-    ((MAX_SCORE++))
+    ((MAX_SCORE++)) || true
     TODO_COUNT=$(grep -r "TODO\|FIXME" src 2>/dev/null | wc -l || echo "0")
     if [ "$TODO_COUNT" -lt 10 ]; then
         echo -e "${GREEN}✅ Few TODO/FIXME comments${NC}"
-        ((COMPLIANCE_SCORE++))
+        ((COMPLIANCE_SCORE++)) || true
     else
         echo -e "${YELLOW}⚠️  Many TODO/FIXME comments ($TODO_COUNT)${NC}"
     fi

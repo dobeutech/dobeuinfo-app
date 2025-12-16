@@ -45,6 +45,44 @@ npm run build
 npm run preview
 ```
 
+## Usage
+
+### Running the Application
+
+After installation, start the development server:
+
+```bash
+npm run dev
+```
+
+Then open your browser to `http://localhost:5173` to view the application.
+
+### CLI Automation Tools
+
+This project includes a comprehensive set of automation scripts:
+
+```bash
+# Interactive CLI menu
+bash scripts/automation/cli-workflow.sh
+
+# Individual scripts
+bash scripts/automation/env-check.sh       # Environment validation
+bash scripts/automation/reviewer.sh        # Code review automation
+bash scripts/automation/compliance-check.sh # Standards compliance
+bash scripts/automation/deps-audit.sh      # Dependency audit
+bash scripts/automation/risk-scan.sh       # Security risk assessment
+bash scripts/automation/doc-sync.sh        # Documentation sync
+bash scripts/automation/a11y-review.sh     # Accessibility review
+```
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+The production build will be output to the `dist/` directory.
+
 ## Project Structure
 
 ```

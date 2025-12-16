@@ -63,13 +63,13 @@ echo "--------------------------"
 # Check for .env files
 if [ -f ".env" ]; then
     echo -e "${RED}❌ .env file exists${NC}"
-    ((HIGH_RISKS++))
+    ((HIGH_RISKS++)) || true
     
     if grep -q "^\.env$" .gitignore 2>/dev/null; then
         echo -e "   ${GREEN}✅ .env is in .gitignore${NC}"
     else
         echo -e "   ${RED}❌ .env NOT in .gitignore - CRITICAL${NC}"
-        ((CRITICAL_RISKS++))
+        ((CRITICAL_RISKS++)) || true
     fi
 else
     echo -e "${GREEN}✅ No .env file in root${NC}"
@@ -94,8 +94,8 @@ SECRETS_FOUND=0
 for pattern in "${SENSITIVE_PATTERNS[@]}"; do
     if grep -rE "$pattern" src/ 2>/dev/null | grep -v "example\|test\|mock" | head -1 | grep -q .; then
         echo -e "${RED}❌ Potential secret pattern: $pattern${NC}"
-        ((SECRETS_FOUND++))
-        ((HIGH_RISKS++))
+        ((SECRETS_FOUND++)) || true
+        ((HIGH_RISKS++)) || true
     fi
 done
 
@@ -111,14 +111,14 @@ if [ -d ".git" ]; then
     HISTORY_SECRETS=0
     for pattern in "${SENSITIVE_PATTERNS[@]}"; do
         if git log --all -p 2>/dev/null | grep -E "$pattern" | grep -v "example\|test" | head -1 | grep -q .; then
-            ((HISTORY_SECRETS++))
+            ((HISTORY_SECRETS++)) || true
         fi
     done
     
     if [ $HISTORY_SECRETS -gt 0 ]; then
         echo -e "${RED}❌ Potential secrets in git history${NC}"
         echo "   Consider using git-filter-branch or BFG Repo-Cleaner"
-        ((HIGH_RISKS++))
+        ((HIGH_RISKS++)) || true
     else
         echo -e "${GREEN}✅ No obvious secrets in git history${NC}"
     fi
@@ -138,10 +138,10 @@ if [ -f "package.json" ]; then
     
     if [ "$TOTAL_DEPS" -gt 100 ]; then
         echo -e "${RED}❌ Very high dependency count - increased attack surface${NC}"
-        ((HIGH_RISKS++))
+        ((HIGH_RISKS++)) || true
     elif [ "$TOTAL_DEPS" -gt 50 ]; then
         echo -e "${YELLOW}⚠️  High dependency count${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     else
         echo -e "${GREEN}✅ Reasonable dependency count${NC}"
     fi
@@ -156,10 +156,10 @@ if [ -f "package.json" ]; then
         OUTDATED_COUNT=$(node -p "Object.keys(require('/tmp/outdated.json')).length" 2>/dev/null || echo "0")
         if [ "$OUTDATED_COUNT" -gt 20 ]; then
             echo -e "${YELLOW}⚠️  Many outdated dependencies ($OUTDATED_COUNT)${NC}"
-            ((MEDIUM_RISKS++))
+            ((MEDIUM_RISKS++)) || true
         elif [ "$OUTDATED_COUNT" -gt 0 ]; then
             echo -e "${BLUE}ℹ️  Some outdated dependencies ($OUTDATED_COUNT)${NC}"
-            ((LOW_RISKS++))
+            ((LOW_RISKS++)) || true
         fi
     fi
     rm -f /tmp/outdated.json
@@ -175,7 +175,7 @@ if [ -d "src" ]; then
     EVAL_COUNT=$(grep -r "eval(" src 2>/dev/null | wc -l || echo "0")
     if [ "$EVAL_COUNT" -gt 0 ]; then
         echo -e "${RED}❌ eval() usage detected ($EVAL_COUNT) - security risk${NC}"
-        ((HIGH_RISKS++))
+        ((HIGH_RISKS++)) || true
     else
         echo -e "${GREEN}✅ No eval() usage${NC}"
     fi
@@ -184,7 +184,7 @@ if [ -d "src" ]; then
     DANGEROUS_HTML=$(grep -r "dangerouslySetInnerHTML" src 2>/dev/null | wc -l || echo "0")
     if [ "$DANGEROUS_HTML" -gt 0 ]; then
         echo -e "${YELLOW}⚠️  dangerouslySetInnerHTML usage ($DANGEROUS_HTML) - XSS risk${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     else
         echo -e "${GREEN}✅ No dangerouslySetInnerHTML usage${NC}"
     fi
@@ -193,10 +193,10 @@ if [ -d "src" ]; then
     TODO_COUNT=$(grep -r "TODO\|FIXME" src 2>/dev/null | wc -l || echo "0")
     if [ "$TODO_COUNT" -gt 50 ]; then
         echo -e "${YELLOW}⚠️  Many TODO/FIXME comments ($TODO_COUNT) - technical debt${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     elif [ "$TODO_COUNT" -gt 20 ]; then
         echo -e "${BLUE}ℹ️  Some TODO/FIXME comments ($TODO_COUNT)${NC}"
-        ((LOW_RISKS++))
+        ((LOW_RISKS++)) || true
     else
         echo -e "${GREEN}✅ Few TODO/FIXME comments${NC}"
     fi
@@ -205,10 +205,10 @@ if [ -d "src" ]; then
     CONSOLE_LOGS=$(grep -r "console\.log" src 2>/dev/null | wc -l || echo "0")
     if [ "$CONSOLE_LOGS" -gt 20 ]; then
         echo -e "${YELLOW}⚠️  Many console.log statements ($CONSOLE_LOGS) - info leakage risk${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     elif [ "$CONSOLE_LOGS" -gt 10 ]; then
         echo -e "${BLUE}ℹ️  Some console.log statements ($CONSOLE_LOGS)${NC}"
-        ((LOW_RISKS++))
+        ((LOW_RISKS++)) || true
     else
         echo -e "${GREEN}✅ Minimal console.log usage${NC}"
     fi
@@ -222,7 +222,7 @@ echo "-----------------------"
 # Check for CORS configuration
 if grep -r "cors" src 2>/dev/null | grep -q .; then
     echo -e "${BLUE}ℹ️  CORS configuration detected - verify settings${NC}"
-    ((LOW_RISKS++))
+    ((LOW_RISKS++)) || true
 fi
 
 # Check for authentication
@@ -231,7 +231,7 @@ AUTH_FOUND=0
 
 for pattern in "${AUTH_PATTERNS[@]}"; do
     if grep -ri "$pattern" src 2>/dev/null | head -1 | grep -q .; then
-        ((AUTH_FOUND++))
+        ((AUTH_FOUND++)) || true
     fi
 done
 
@@ -241,7 +241,7 @@ if [ $AUTH_FOUND -gt 0 ]; then
     echo "   • Implement rate limiting"
     echo "   • Use secure password hashing"
     echo "   • Implement CSRF protection"
-    ((MEDIUM_RISKS++))
+    ((MEDIUM_RISKS++)) || true
 fi
 
 # Build and deployment risks
@@ -254,7 +254,7 @@ if [ -d "dist" ]; then
     SOURCE_MAPS=$(find dist -name "*.map" | wc -l)
     if [ "$SOURCE_MAPS" -gt 0 ]; then
         echo -e "${YELLOW}⚠️  Source maps in build ($SOURCE_MAPS) - exposes source code${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     else
         echo -e "${GREEN}✅ No source maps in build${NC}"
     fi
@@ -263,7 +263,7 @@ fi
 # Check for .git in deployment
 if [ -d "dist/.git" ]; then
     echo -e "${RED}❌ .git directory in build - exposes repository${NC}"
-    ((HIGH_RISKS++))
+    ((HIGH_RISKS++)) || true
 else
     echo -e "${GREEN}✅ No .git in build${NC}"
 fi
@@ -279,17 +279,17 @@ if [ -f "Dockerfile" ]; then
     
     if grep -q "^FROM.*:latest" Dockerfile; then
         echo -e "${YELLOW}⚠️  Using :latest tag - unpredictable builds${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     fi
     
     if ! grep -q "^USER" Dockerfile; then
         echo -e "${YELLOW}⚠️  No USER instruction - running as root${NC}"
-        ((MEDIUM_RISKS++))
+        ((MEDIUM_RISKS++)) || true
     fi
     
     if grep -q "^ADD" Dockerfile; then
         echo -e "${BLUE}ℹ️  Using ADD instead of COPY${NC}"
-        ((LOW_RISKS++))
+        ((LOW_RISKS++)) || true
     fi
 fi
 
@@ -298,7 +298,7 @@ if [ -d ".github/workflows" ]; then
     echo -e "${GREEN}✅ CI/CD configured${NC}"
 else
     echo -e "${YELLOW}⚠️  No CI/CD configuration - manual deployment risk${NC}"
-    ((MEDIUM_RISKS++))
+    ((MEDIUM_RISKS++)) || true
 fi
 
 # Data handling risks
@@ -311,14 +311,14 @@ LOCALSTORAGE=$(grep -r "localStorage" src 2>/dev/null | wc -l || echo "0")
 if [ "$LOCALSTORAGE" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  localStorage usage ($LOCALSTORAGE) - XSS can access data${NC}"
     echo "   Consider using httpOnly cookies for sensitive data"
-    ((MEDIUM_RISKS++))
+    ((MEDIUM_RISKS++)) || true
 fi
 
 # Check for sessionStorage usage
 SESSIONSTORAGE=$(grep -r "sessionStorage" src 2>/dev/null | wc -l || echo "0")
 if [ "$SESSIONSTORAGE" -gt 0 ]; then
     echo -e "${BLUE}ℹ️  sessionStorage usage ($SESSIONSTORAGE)${NC}"
-    ((LOW_RISKS++))
+    ((LOW_RISKS++)) || true
 fi
 
 # Third-party risks
@@ -331,7 +331,7 @@ EXTERNAL_SCRIPTS=$(grep -r "script.*src=.*http" public 2>/dev/null | wc -l || ec
 if [ "$EXTERNAL_SCRIPTS" -gt 0 ]; then
     echo -e "${YELLOW}⚠️  External scripts ($EXTERNAL_SCRIPTS) - supply chain risk${NC}"
     echo "   Use Subresource Integrity (SRI) for external scripts"
-    ((MEDIUM_RISKS++))
+    ((MEDIUM_RISKS++)) || true
 else
     echo -e "${GREEN}✅ No external scripts detected${NC}"
 fi
