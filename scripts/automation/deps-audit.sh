@@ -206,9 +206,10 @@ fi
 # Check for peer dependency warnings
 echo ""
 echo "🔗 Peer Dependencies"
-PEER_WARNINGS=$(npm ls 2>&1 | grep -c "UNMET PEER DEPENDENCY" || echo "0")
+PEER_WARNINGS=$(npm ls 2>&1 | grep -c "UNMET PEER DEPENDENCY" || true)
+PEER_WARNINGS=${PEER_WARNINGS:-0}
 
-if [ "$PEER_WARNINGS" -gt 0 ]; then
+if [ "$PEER_WARNINGS" -gt 0 ] 2>/dev/null; then
     echo -e "${YELLOW}⚠️  $PEER_WARNINGS unmet peer dependencies${NC}"
     echo "Run 'npm ls' for details"
 else
@@ -237,9 +238,10 @@ fi
 # Check for deprecated packages
 echo ""
 echo "⚠️  Deprecated Packages"
-DEPRECATED=$(npm ls --depth=0 2>&1 | grep -c "DEPRECATED" || echo "0")
+DEPRECATED=$(npm ls --depth=0 2>&1 | grep -c "DEPRECATED" || true)
+DEPRECATED=${DEPRECATED:-0}
 
-if [ "$DEPRECATED" -gt 0 ]; then
+if [ "$DEPRECATED" -gt 0 ] 2>/dev/null; then
     echo -e "${YELLOW}⚠️  $DEPRECATED deprecated packages found${NC}"
     npm ls --depth=0 2>&1 | grep "DEPRECATED" | head -5
     echo ""
